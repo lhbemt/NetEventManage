@@ -85,6 +85,7 @@ bool CThreadPool::Stop()
     m_condvar.SiganlAll(); // wake up all
     for (int i = 0; i < m_nInitThreadNum; ++i)
         pthread_join(*(m_pThreads + i), NULL);
+    delete[] m_pThreads;
     std::cout << "remain task: " << m_lstTasks.size() << std::endl;
     for (auto& task : m_lstTasks)
         if (task.arg)
