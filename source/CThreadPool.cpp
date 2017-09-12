@@ -89,7 +89,10 @@ bool CThreadPool::Stop()
     std::cout << "remain task: " << m_lstTasks.size() << std::endl;
     for (auto& task : m_lstTasks)
         if (task.arg)
-            delete task.arg;
+		{
+			char* p = (char*)(task.arg);
+            delete[] p;
+		}
     m_lstTasks.clear();
     return true;
 }
