@@ -7,12 +7,15 @@ static int CSignalManage::m_pipefd[2];
 
 void CSignalManage::RegisterSiganl(int signo, signalCallBack& callBack)
 {
+    m_signalLock.Lock();
     m_mapsignals.insert(std::make_pair<int,signalCallBack>(signo, callBack));
     signal(signo, SignalHandle); // use static
+    m_signalLock.Unlock();
 }
 
 void CSignalManage::UnRegisterSiganl(int signo)
 {
+    m_signalLock.Lock();
     for (auto iter = m_mapsignals.begin(); iter != m_mapsignals.end(); ++iter)
     {
         if (iter->first == signo)
@@ -21,6 +24,7 @@ void CSignalManage::UnRegisterSiganl(int signo)
             break;
         }
     }
+    m_signalLock.Unlock();
 }
 
 bool CSignalManage::Init()
@@ -35,6 +39,13 @@ bool CSignalManage::Init()
 void CSignalManage::SignalHandle(int signo)
 {
     write(m_pipefd[1], &signo, sizeof(int)); // read fd[0], write fd[1]
+}
+
+void CSignalManage::Stop()
+{
+    m_signalLock.Lock();
+    m_mapsignals.clear();
+    m_signalLock.Unlock();
 }
 
 
