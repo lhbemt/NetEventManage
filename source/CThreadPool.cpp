@@ -3,34 +3,24 @@
 //
 
 #include "../include/CThreadPool.h"
-#include <unistd.h>
 
 void* ThreadsFunc(void* arg)
 {
     CThreadPool* pool = static_cast<CThreadPool*>(arg);
-    pool->m_nReady.fetch_add(1);
     while(pool->m_bRun)
     {
-        bool bRet = pool->m_condvar.Wait();
-        if (!bRet)
-            std::cout << "wake up failed" << std::endl;
-        while (true)
+        pool->m_condvar.Wait();
+        pool->m_lstLock.Lock();
+        if (!pool->m_lstTasks.empty())
         {
-            pool->m_lstLock.Lock();
-            if (!pool->m_lstTasks.empty())
-            {
-                Task task = std::move(pool->m_lstTasks.front());
-                pool->m_lstTasks.pop_front();
-                pool->m_lstLock.Unlock();
-                // do task
-                task.func(task.arg);
-            }
-            else
-            {
-                pool->m_lstLock.Unlock();
-                break;
-            }
+            Task task = std::move(pool->m_lstTasks.front());
+            pool->m_lstTasks.pop_front();
+            pool->m_lstLock.Unlock();
+            // do task
+            task.func(task.arg);
         }
+        else
+            pool->m_lstLock.Unlock();
     }
     return nullptr;
 }
@@ -46,8 +36,6 @@ bool CThreadPool::Start()
     {
         pthread_create(m_pThreads + i, NULL, ThreadsFunc, this);
     }
-    while(m_nReady < m_nInitThreadNum) // wait all thread run
-        ;
     return true;
 }
 
@@ -58,9 +46,7 @@ bool CThreadPool::AddTask(Task& task)
     m_lstLock.Lock();
     m_lstTasks.emplace_back(std::move(task));
     m_lstLock.Unlock();
-    bool bRet = m_condvar.Signal(); // wake up one thread
-    if (!bRet)
-        std::cout << "siganal failed" << std::endl;
+    m_condvar.Signal(); // wake up one thread
     return true;
 }
 
@@ -71,9 +57,7 @@ bool CThreadPool::AddTask(Task&& task)
     m_lstLock.Lock();
     m_lstTasks.emplace_back(task);
     m_lstLock.Unlock();
-    bool bRet = m_condvar.Signal(); // wake up one thread
-    if (!bRet)
-        std::cout << "siganal failed" << std::endl;
+    m_condvar.Signal(); // wake up one thread
     return true;
 }
 
@@ -85,14 +69,10 @@ bool CThreadPool::Stop()
     m_condvar.SiganlAll(); // wake up all
     for (int i = 0; i < m_nInitThreadNum; ++i)
         pthread_join(*(m_pThreads + i), NULL);
-    delete[] m_pThreads;
     std::cout << "remain task: " << m_lstTasks.size() << std::endl;
     for (auto& task : m_lstTasks)
         if (task.arg)
-		{
-			char* p = (char*)(task.arg);
-            delete[] p;
-		}
+            delete task.arg;
     m_lstTasks.clear();
     return true;
 }

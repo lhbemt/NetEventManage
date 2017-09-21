@@ -3,3 +3,13 @@
 //
 
 #include "../include/CServerManage.h"
+
+CServerManage::CServerManage()
+{
+
+}
+
+CServerManage::~CServerManage()
+{
+
+}

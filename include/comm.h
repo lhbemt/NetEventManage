@@ -15,9 +15,9 @@ enum class EVENT_TYPE
 };
 
 // network package define
-struct Net_Message
+struct Net_MessageHead
 {
-
+    int nLen; // length of package
 };
 
 #endif //NETSERVEREVENT_COMM_H

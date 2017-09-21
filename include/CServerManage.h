@@ -6,12 +6,13 @@
 #define NETSERVEREVENT_CSERVERMANAGE_H
 
 #include "comm.h"
+#include "CNonCopyClass.h"
 
-class CServerManage
+class CServerManage : public CNonCopyClass
 {
 public:
-    CServerManage() = default;
-    ~CServerManage() = default;
+    CServerManage();
+    ~CServerManage();
 };
 
 
