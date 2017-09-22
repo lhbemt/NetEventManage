@@ -25,8 +25,9 @@ int CTcpSocket::SendData(void *pData, int nLen)
     int nRet = send(m_sockfd, m_szSendBuff, m_nSendLen, 0);
     if (nRet == -1)
     {
-        if (errno == EAGAIN || errno == EWOULDBLOCK)
+        if (errno == EAGAIN || errno == EWOULDBLOCK) // return immediately when buff full
         {
+            // send failed beacause send buff was full, need send agin
             m_lSendLock.Unlock();
             return nLen;
         }

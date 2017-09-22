@@ -5,10 +5,13 @@
 
 static int CSignalManage::m_pipefd[2];
 
-void CSignalManage::RegisterSiganl(int signo, signalCallBack& callBack)
+void CSignalManage::RegisterSiganl(int signo, signalCallBack& callBack, void* arg)
 {
     m_signalLock.Lock();
-    m_mapsignals.insert(std::make_pair<int,signalCallBack>(signo, callBack));
+    signalFuncArg func;
+    func.callBack = callBack;
+    func.arg = arg;
+    m_mapsignals.insert(std::make_pair<int,signalFuncArg>(signo, func));
     signal(signo, SignalHandle); // use static
     m_signalLock.Unlock();
 }

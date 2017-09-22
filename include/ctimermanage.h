@@ -10,13 +10,19 @@
 #include <atomic>
 #include <thread>
 
-typedef std::function<void()> timerCallBack;
+typedef std::function<void(void*)> timerCallBack;
 
 struct TimerDefine
 {
     int nTimerID;
     int nTickCount; // time travel
     struct timeval endTime;
+};
+
+struct timerFuncArg
+{
+    timerCallBack callback;
+    void*         arg;
 };
 
 class CTimerManage : public CNonCopyClass
@@ -28,14 +34,30 @@ public:
     ~CTimerManage()
     {}
 
-    bool SetTimer(int timerID, timerCallBack& callBack, int milliseconds);
+    bool SetTimer(int timerID, timerCallBack& callBack, void* arg, int milliseconds);
     void KillTimer(int timerID);
-    void Init();
+    bool Init();
     void Tick();
     void Stop();
+    int  Getfd()
+    {
+        return m_pipefd[0];
+    }
+
+    timerCallBack& GetCallBack(int timerid, bool& bGet)
+    {
+        m_timerLock.Lock();
+        auto iter = m_mapTimer.find(signo);
+        m_timerLock.Unlock();
+        if (iter != m_mapTimer.end())
+        {
+            bGet = true;
+            return iter->second;
+        }
+    }
 
 private:
-    std::map<int, timerCallBack> m_mapTimer;
+    std::map<int, timerFuncArg> m_mapTimer;
     std::list<TimerDefine*>      m_lstTimer;
     CMutex                       m_timerLock;
     std::atomic<bool>            m_bRun;

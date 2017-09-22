@@ -24,8 +24,8 @@ public:
         memset(m_szRecvBuff, 0, sizeof(m_szRecvBuff));
     }
 
-    int SendData(void* pData, int nLen);
-    int RecvData();
+    void SendData(void* pData, int nLen);
+    void RecvData();
 
 
 private:

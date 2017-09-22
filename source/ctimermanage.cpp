@@ -5,7 +5,7 @@
 #include <sys/select.h>
 #include <time.h>
 
-bool CTimerManage::SetTimer(int timerID, timerCallBack &callBack, int milliseconds)
+bool CTimerManage::SetTimer(int timerID, timerCallBack &callBack, void* arg, int milliseconds)
 {
     if (!m_bRun)
         return false;
@@ -33,7 +33,10 @@ bool CTimerManage::SetTimer(int timerID, timerCallBack &callBack, int millisecon
     endTime->nTickCount = milliseconds;
     endTime->nTimerID = timerID;
     m_lstTimer.push_back(endTime);
-    m_mapTimer.insert(std::make_pair<int, timerCallBack>(timerID, callBack));
+    timerFuncArg func;
+    func.callback = callBack;
+    func.arg = arg;
+    m_mapTimer.insert(std::make_pair<int, timerFuncArg>(timerID, func));
     m_timerLock.Unlock();
 }
 
@@ -64,7 +67,7 @@ void CTimerManage::KillTimer(int timerID)
     m_timerLock.Unlock();
 }
 
-void CTimerManage::Init()
+bool CTimerManage::Init()
 {
     int nRet = pipe(m_pipefd);
     if (nRet == -1)
