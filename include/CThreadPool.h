@@ -26,9 +26,8 @@ struct Task
 class CThreadPool : CNonCopyClass
 {
 public:
-    explicit CThreadPool(int nThreadNum) : m_nInitThreadNum(nThreadNum)
+    explicit CThreadPool(int nThreadNum) : m_nInitThreadNum(nThreadNum), m_bRun(false), m_nReady(0)
     {
-        m_bRun = false;
         if (m_nInitThreadNum > 0 && m_nInitThreadNum <= MAX_THREADS)
             m_pThreads = new(std::nothrow) pthread_t[m_nInitThreadNum]; // new maybe faild
     }
@@ -51,6 +50,7 @@ private:
     CConditionVar   m_condvar;
     pthread_t*      m_pThreads;
     std::atomic<bool> m_bRun;
+    std::atomic<int> m_nReady; // have start thread
 };
 
 
