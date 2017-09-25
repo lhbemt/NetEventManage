@@ -22,24 +22,37 @@ int CTcpSocket::SendData(void *pData, int nLen)
     m_nSendLen += sizeof(nLen);
     memcpy(m_szSendBuff + m_nSendLen, pData, nLen);
     // deliver send
-    int nRet = send(m_sockfd, m_szSendBuff, m_nSendLen, 0);
-    if (nRet == -1)
+    int nTotalSend = m_nSendLen;
+    int nReadySend = 0;
+    while(1)
     {
-        if (errno == EAGAIN || errno == EWOULDBLOCK) // return immediately when buff full
+        int nRet = send(m_sockfd, m_szSendBuff + nReadySend, m_nSendLen - nReadySend, 0);
+        if (nRet == -1)
         {
-            // send failed beacause send buff was full, need send agin
-            m_lSendLock.Unlock();
-            return nLen;
+            if (errno == EAGAIN || errno == EWOULDBLOCK) // return immediately when buff full
+            {
+                // send failed beacause send buff was full, need send agin
+                m_lSendLock.Unlock();
+                return nLen;
+            }
+            else // socket error
+            {
+                m_lSendLock.Unlock();
+                return -1;
+            }
         }
-        else // socket error
+        else
         {
-            m_lSendLock.Unlock();
-            return -1;
+            nReadySend += nRet;
+            if (nReadySend == nTotalSend)
+                break; // send all
         }
     }
 
+    memset(m_szSendBuff, 0, sizeof(m_szSendBuff));
+    m_nSendLen = 0;
     m_lSendLock.Unlock();
-    return nRet;
+    return nLen; // send success
 }
 
 int CTcpSocket::RecvData() // use et mode
@@ -54,12 +67,12 @@ int CTcpSocket::RecvData() // use et mode
             if (errno == EAGAIN || errno == EWOULDBLOCK)
             {
                 m_lRecvLock.Unlock();
-                return -1;
+                return -2;
             }
             else
             {
                 m_lRecvLock.Unlock();
-                return -2;
+                return -1; // socket error
             }
         }
         else
@@ -70,8 +83,9 @@ int CTcpSocket::RecvData() // use et mode
     }
 
     // do something with recv buff
-
     m_lRecvLock.Unlock();
+    // ...
+    //
     return 0; // recv success
 
 
