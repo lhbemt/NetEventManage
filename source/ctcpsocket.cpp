@@ -32,6 +32,8 @@ int CTcpSocket::SendData(void *pData, int nLen)
             if (errno == EAGAIN || errno == EWOULDBLOCK) // return immediately when buff full
             {
                 // send failed beacause send buff was full, need send agin
+                memcpy(m_szSendBuff, m_szSendBuff + nReadySend, nTotalSend - nReadySend);
+                m_nSendLen = nTotalSend - nReadySend;
                 m_lSendLock.Unlock();
                 return nLen;
             }
