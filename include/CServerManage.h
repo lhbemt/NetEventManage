@@ -24,6 +24,7 @@ public:
     ~CServerManage();
 
     bool Start();
+    bool Stop();
 
 private:
     bool Init(); // init state
@@ -41,10 +42,10 @@ private:
     CClientManage       clientManage;
     CThreadPool*        threadpool;
 
+    int                 m_pipefd[2]; // stop server
     int                 m_socklistenfd; // listen socket
     int                 m_epollfd; // epoll
     std::thread         m_epollThread; // epoll thread
-    std::atomic<bool>   m_bRun; // stop
 };
 
 

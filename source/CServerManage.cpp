@@ -12,7 +12,7 @@
 #include <arpa/inet.h>
 #include <functional>
 
-CServerManage::CServerManage() : m_bRun(false)
+CServerManage::CServerManage()
 {
 
 }
@@ -91,39 +91,90 @@ bool CServerManage::InitListenSock()
 }
 
 bool CServerManage::Init()
-{
+{   
     bool bRet = false;
+    // create epoll
+    m_epollfd = epoll_create(5);
+    if (m_epollfd < 0)
+    {
+        return false;
+    }
+
+    //create pipe to stop
+    int nReturn = -1;
+    nReturn = pipe(m_pipefd);
+    if (nReturn != 0)
+    {
+        close(m_epollfd);
+        return false;
+    }
+    fcntl(m_pipefd[0], F_SETFL, fcntl(m_pipefd[0], F_GETFL, 0) | O_NONBLOCK);
+    bRet = AttachToEpoll(m_pipefd[0]);
+    if (!bRet)
+    {
+        close(m_epollfd);
+        close(m_pipefd[0]);
+        close(m_pipefd[1]);
+        return false;
+    }
+
     bRet = signalManage.Init();
     if (!bRet)
+    {
+        close(m_epollfd);
+        close(m_pipefd[0]);
+        close(m_pipefd[1]);
         return false;
+    }
+    //attach to epoll
+    bRet = AttachToEpoll(signalManage.Getfd());
+    if (!bRet)
+    {
+        close(m_epollfd);
+        close(m_pipefd[0]);
+        close(m_pipefd[1]);
+        signalManage.Stop();
+        return false;
+    }
+
     bRet = timerManage.Init();
     if (!bRet)
     {
+        close(m_epollfd);
+        close(m_pipefd[0]);
+        close(m_pipefd[1]);
         signalManage.Stop();
+        return false;
+    }
+    //attach to epoll
+    bRet = AttachToEpoll(timerManage.Getfd());
+    if (!bRet)
+    {
+        close(m_epollfd);
+        close(m_pipefd[0]);
+        close(m_pipefd[1]);
+        signalManage.Stop();
+        timerManage.Stop();
         return false;
     }
 
     threadpool = new(std::nothrow) CThreadPool(4);
     if (threadpool == nullptr)
     {
+        close(m_epollfd);
+        close(m_pipefd[0]);
+        close(m_pipefd[1]);
         timerManage.Stop();
         signalManage.Stop();
         return false;
     }
     threadpool->Start();
 
-    // create epoll
-    m_epollfd = epoll_create(5);
-    if (m_epollfd < 0)
-    {
-        timerManage.Stop();
-        signalManage.Stop();
-        threadpool->Stop();
-        return false;
-    }
-
     if (!InitListenSock())
     {
+        close(m_epollfd);
+        close(m_pipefd[0]);
+        close(m_pipefd[1]);
         timerManage.Stop();
         signalManage.Stop();
         threadpool->Stop();
@@ -142,7 +193,7 @@ bool CServerManage::Start()
     epoll_event envs[MAX_EPOLL_ENVS];
     memset(envs, 0, sizeof(epoll_event) * MAX_EPOLL_ENVS);
     m_epollThread = std::move(std::thread([this, &nRet, &envs](){
-        while(m_bRun)
+        while(1)
         {
             nRet = epoll_wait(m_epollfd, envs, MAX_EPOLL_ENVS, -1);
             if (nRet < 0)
@@ -151,6 +202,8 @@ bool CServerManage::Start()
             {
                 if (envs[i].data.fd == m_socklistenfd) // accept
                     DoAccept(&envs[i]);
+                else if (envs[i].data.fd == m_pipefd[0]) // stop
+                    return;
                 else if (envs[i].data.fd == signalManage.Getfd()) // signal
                     DoSignal(&envs[i]);
                 else if (envs[i].data.fd == timerManage.Getfd()) // timer
@@ -276,21 +329,20 @@ void CServerManage::DoClientSockt(epoll_event *env)
     return;
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+void CServerManage::Stop()
+{
+    write(m_pipefd[1], "2", 1);
+    m_epollThread.join();
+    threadpool->Stop();
+    delete threadpool;
+    clientManage.CloseAllSocket();
+    signalManage.Stop();
+    timerManage.Stop();
+    close(m_pipefd[0]);
+    close(m_pipefd[1]);
+    close(m_epollfd);
+    return;
+}
 
 
 
