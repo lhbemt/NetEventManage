@@ -3,18 +3,14 @@
 #include <sys/types.h>
 #include <errno.h>
 
-CTcpSocket::CTcpSocket()
-{
-
-}
-
-int CTcpSocket::SendData(void *pData, int nLen)
+void CTcpSocket::SendData(void *pData, int nLen)
 {
     m_lSendLock.Lock();
     if (m_nSendLen + nLen + sizeof(Net_MessageHead) > BUFF_SIZE)
     {
         m_lSendLock.Unlock();
-        return -2; // not enuogh buff
+        //return -2; // not enuogh buff
+		return;
     }
 
     // copy to sendbuff
@@ -35,12 +31,14 @@ int CTcpSocket::SendData(void *pData, int nLen)
                 memcpy(m_szSendBuff, m_szSendBuff + nReadySend, nTotalSend - nReadySend);
                 m_nSendLen = nTotalSend - nReadySend;
                 m_lSendLock.Unlock();
-                return nLen;
+                //return nLen;
+				return;
             }
             else // socket error
             {
                 m_lSendLock.Unlock();
-                return -1;
+                //return -1;
+				return;
             }
         }
         else
@@ -54,10 +52,11 @@ int CTcpSocket::SendData(void *pData, int nLen)
     memset(m_szSendBuff, 0, sizeof(m_szSendBuff));
     m_nSendLen = 0;
     m_lSendLock.Unlock();
-    return nLen; // send success
+    //return nLen; // send success
+	return;
 }
 
-int CTcpSocket::RecvData() // use et mode
+void CTcpSocket::RecvData() // use et mode
 {
     m_lRecvLock.Lock();
 
@@ -69,12 +68,14 @@ int CTcpSocket::RecvData() // use et mode
             if (errno == EAGAIN || errno == EWOULDBLOCK)
             {
                 m_lRecvLock.Unlock();
-                return -2;
+                //return -2;
+				return;
             }
             else
             {
                 m_lRecvLock.Unlock();
-                return -1; // socket error
+                //return -1; // socket error
+				return;
             }
         }
         else
@@ -88,8 +89,8 @@ int CTcpSocket::RecvData() // use et mode
     m_lRecvLock.Unlock();
     // ...
     //
-    return 0; // recv success
-
+    //return 0; // recv success
+	return;
 
 
 

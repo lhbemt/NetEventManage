@@ -3,7 +3,7 @@
 #include <fcntl.h>
 #include <signal.h>
 
-static int CSignalManage::m_pipefd[2];
+int CSignalManage::m_pipefd[2];
 
 void CSignalManage::RegisterSiganl(int signo, signalCallBack& callBack, void* arg)
 {
@@ -11,7 +11,7 @@ void CSignalManage::RegisterSiganl(int signo, signalCallBack& callBack, void* ar
     signalFuncArg func;
     func.callBack = callBack;
     func.arg = arg;
-    m_mapsignals.insert(std::make_pair<int,signalFuncArg>(signo, func));
+    m_mapsignals.insert(std::make_pair(signo, func));
     signal(signo, SignalHandle); // use static
     m_signalLock.Unlock();
 }

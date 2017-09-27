@@ -39,7 +39,7 @@ bool CServerManage::AttachToEpoll(int fd)
 
 bool CServerManage::DettachEpoll(int fd)
 {
-    in nRet = -1;
+    int nRet = -1;
     nRet = epoll_ctl(m_epollfd, EPOLL_CTL_DEL, fd, NULL);
     if (nRet < 0)
         return false;
@@ -187,7 +187,6 @@ bool CServerManage::Start()
 {
     if (!Init())
         return false;
-    m_bRun = true;
     // epoll thread
     int nRet = -1;
     epoll_event envs[MAX_EPOLL_ENVS];
@@ -228,7 +227,7 @@ void CServerManage::DoAccept(epoll_event *env)
             else // wrong with accept
             {
                 DettachEpoll(env->data.fd);
-                m_bRun = false; // ternimate thread
+                write(m_pipefd[1], "2", 1); // ternimate thread
                 return;
             }
         }
@@ -253,7 +252,7 @@ void CServerManage::DoSignal(epoll_event *env) // siganl
                 return;
             else
             {
-                m_bRun = false;
+                write(m_pipefd[1], "2", 1);
                 DettachEpoll(env->data.fd);
                 return;
             }
@@ -284,7 +283,7 @@ void CServerManage::DoTimer(epoll_event *env)
                 return;
             else
             {
-                m_bRun = false;
+				write(m_pipefd[1], "2", 1);
                 DettachEpoll(env->data.fd);
                 return;
             }
@@ -295,7 +294,7 @@ void CServerManage::DoTimer(epoll_event *env)
         if (bGet)
         {
             Task task;
-            task.func = arg.callBack;
+            task.func = arg.callback;
             task.arg = arg.arg;
             threadpool->AddTask(std::move(task));
         }
@@ -321,7 +320,7 @@ void CServerManage::DoClientSockt(epoll_event *env)
         if (client)
         {
             Task task;
-            task.func = std::bind(&CTcpSocket::SendData, client, NULL, 0);
+            task.func = std::bind(&CTcpSocket::SendData, client, nullptr, 0);
             task.arg = NULL;
             threadpool->AddTask(std::move(task));
         }
@@ -329,7 +328,7 @@ void CServerManage::DoClientSockt(epoll_event *env)
     return;
 }
 
-void CServerManage::Stop()
+bool CServerManage::Stop()
 {
     write(m_pipefd[1], "2", 1);
     m_epollThread.join();
@@ -341,7 +340,7 @@ void CServerManage::Stop()
     close(m_pipefd[0]);
     close(m_pipefd[1]);
     close(m_epollfd);
-    return;
+    return true;
 }
 
 void CServerManage::RegisterEvent(EVENT_TYPE type, EventBase env, int milliseconds)

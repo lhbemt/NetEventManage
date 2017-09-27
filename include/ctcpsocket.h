@@ -1,6 +1,7 @@
 #ifndef CTCPSOCKET_H
 #define CTCPSOCKET_H
 #include <string.h>
+#include <unistd.h>
 #include "../include/comm.h"
 #include "../include/lockmanage.h"
 
@@ -18,6 +19,15 @@ public:
     void Init(int nSockfd)
     {
         m_sockfd = nSockfd;
+        m_nRecvLen = 0;
+        m_nSendLen = 0;
+        memset(m_szSendBuff, 0, sizeof(m_szSendBuff));
+        memset(m_szRecvBuff, 0, sizeof(m_szRecvBuff));
+    }
+
+    void CloseSocket()
+    {
+        close(m_sockfd);
         m_nRecvLen = 0;
         m_nSendLen = 0;
         memset(m_szSendBuff, 0, sizeof(m_szSendBuff));

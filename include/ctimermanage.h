@@ -44,10 +44,10 @@ public:
         return m_pipefd[0];
     }
 
-    timerCallBack& GetCallBack(int timerid, bool& bGet)
+    timerFuncArg& GetCallBack(int timerid, bool& bGet)
     {
         m_timerLock.Lock();
-        auto iter = m_mapTimer.find(signo);
+        auto iter = m_mapTimer.find(timerid);
         m_timerLock.Unlock();
         if (iter != m_mapTimer.end())
         {
@@ -63,6 +63,6 @@ private:
     std::atomic<bool>            m_bRun;
     std::thread                  m_tickThread;
     int                          m_pipefd[2];
-}
+};
 
 #endif // CTIMERMANAGE_H

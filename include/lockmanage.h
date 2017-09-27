@@ -48,21 +48,29 @@ public:
         pthread_mutex_destroy(&m_mutex);
     }
 
-    void Wait()
+    bool Wait()
     {
-        pthread_mutex_lock(&m_mutex);
-        pthread_cond_wait(&m_cond, &m_mutex);
-        pthread_mutex_unlock(&m_mutex);
+        int nRet = -1;
+        nRet = pthread_mutex_lock(&m_mutex);
+        if (nRet != 0)
+            return false;
+        nRet = pthread_cond_wait(&m_cond, &m_mutex);
+        if (nRet != 0)
+            return false;
+        nRet = pthread_mutex_unlock(&m_mutex);
+        if (nRet != 0)
+            return false;
+        return true;
     }
 
-    void Signal()
+    bool Signal()
     {
-        pthread_cond_signal(&m_cond);
+        return pthread_cond_signal(&m_cond) == 0;
     }
 
-    void SiganlAll()
+    bool SiganlAll()
     {
-        pthread_cond_broadcast(&m_cond);
+        return pthread_cond_broadcast(&m_cond) == 0;
     }
 
 private:

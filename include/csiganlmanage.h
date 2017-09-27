@@ -51,6 +51,6 @@ private:
     std::map<int, signalFuncArg> m_mapsignals;
     static int  m_pipefd[2];
     CMutex      m_signalLock;
-}
+};
 
 #endif // CSIGANLMANAGE_H

@@ -30,13 +30,13 @@ public:
     void CloseAllSocket()
     {
         for (auto& iter : m_mapClient)
-            iter->second->CloseSocket();
+            iter.second->CloseSocket();
         m_mapClient.clear();
     }
 
     void AddToManage(int sockfd, CTcpSocket* tcp)
     {
-        m_mapClient.insert(std::make_pair<int, CTcpSocket*>(sockfd, tcp));
+        m_mapClient.insert(std::make_pair(sockfd, tcp));
     }
 
 private:

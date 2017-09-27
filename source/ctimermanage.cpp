@@ -36,8 +36,9 @@ bool CTimerManage::SetTimer(int timerID, timerCallBack &callBack, void* arg, int
     timerFuncArg func;
     func.callback = callBack;
     func.arg = arg;
-    m_mapTimer.insert(std::make_pair<int, timerFuncArg>(timerID, func));
+    m_mapTimer.insert(std::make_pair(timerID, func));
     m_timerLock.Unlock();
+	return true;
 }
 
 void CTimerManage::KillTimer(int timerID)
@@ -56,7 +57,7 @@ void CTimerManage::KillTimer(int timerID)
 
     for (auto iter = m_lstTimer.begin(); iter != m_lstTimer.end(); ++iter)
     {
-        if (iter->nTimerID == timerID)
+        if ((*iter)->nTimerID == timerID)
         {
             delete *iter;
             m_lstTimer.erase(iter);
@@ -91,7 +92,7 @@ void CTimerManage::Tick()
            gettimeofday(&now, NULL);
            for (auto& ltime : m_lstTimer)
            {
-               if (ltime->endtime.tv_sec < now.tv_sec)
+               if (ltime->endTime.tv_sec < now.tv_sec)
                {
                    write(m_pipefd[1], &ltime->nTimerID, sizeof(int));
                    if (now.tv_usec + ltime->nTickCount * 1000 > 1000000)
@@ -105,9 +106,9 @@ void CTimerManage::Tick()
                        ltime->endTime.tv_usec = now.tv_usec + ltime->nTickCount * 1000;
                    }
                }
-               else if (ltime->endtime.tv_sec == now.tv_sec)
+               else if (ltime->endTime.tv_sec == now.tv_sec)
                {
-                   if (ltime->endtime.tv_usec <= now.tv_usec)
+                   if (ltime->endTime.tv_usec <= now.tv_usec)
                    {
                        write(m_pipefd[1], &ltime->nTimerID, sizeof(int));
                        if (now.tv_usec + ltime->nTickCount * 1000 > 1000000)

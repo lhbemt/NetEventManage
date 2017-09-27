@@ -2,7 +2,7 @@
 // Created by li on 9/6/17.
 //
 
-#include "../include/CThreadPool.h"
+#include "CThreadPool.h"
 #include <unistd.h>
 
 void* ThreadsFunc(void* arg)
@@ -88,8 +88,7 @@ bool CThreadPool::Stop()
     std::cout << "remain task: " << m_lstTasks.size() << std::endl;
     for (auto& task : m_lstTasks)
         if (task.arg)
-            delete task.arg;
+            delete (char*)task.arg;
     m_lstTasks.clear();
-	delete[] m_pThreads;
     return true;
 }

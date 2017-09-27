@@ -12,10 +12,6 @@
 #include "ctimermanage.h"
 #include "CThreadPool.h"
 
-const char* strIp = "127.0.0.1";
-const int   nPort = 8080;
-const int   MAX_EPOLL_ENVS = 100000;
-
 struct epoll_event;
 class CServerManage : public CNonCopyClass
 {
