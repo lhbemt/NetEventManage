@@ -344,8 +344,34 @@ void CServerManage::Stop()
     return;
 }
 
+void CServerManage::RegisterEvent(EVENT_TYPE type, EventBase env, int milliseconds)
+{
+    switch(type)
+    {
+    case EVENT_TYPE::EVENT_SIG:
+        signalManage.RegisterSiganl(env.fd, env.callBack, env.arg);
+        break;
+    case EVENT_TYPE::EVENT_TIMER:
+        timerManage.SetTimer(env.fd, env.callBack, env.arg, milliseconds);
+        break;
+    case EVENT_TYPE::EVENT_SOCKET: // have done, no need
+        break;
+    }
+}
 
-
-
-
-
+void CServerManage::UnRegisterEvent(EVENT_TYPE type, EventBase env)
+{
+    switch (type) {
+    case EVENT_TYPE::EVENT_SIG:
+        signalManage.UnRegisterSiganl(env.fd);
+        break;
+    case EVENT_TYPE::EVENT_TIMER:
+        timerManage.KillTimer(env.fd);
+        break;
+    case EVENT_TYPE::EVENT_SOCKET: // close socket
+        clientManage.CloseSocket(env.fd);
+        break;
+    default:
+        break;
+    }
+}

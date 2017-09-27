@@ -25,6 +25,9 @@ public:
 
     bool Start();
     bool Stop();
+    // if register timer, need set milliseconds
+    void RegisterEvent(EVENT_TYPE type, struct EventBase env, int milliseconds = 0);
+    void UnRegisterEvent(EVENT_TYPE type, struct EventBase env);
 
 private:
     bool Init(); // init state
