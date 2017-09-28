@@ -48,6 +48,8 @@ void CSignalManage::Stop()
 {
     m_signalLock.Lock();
     m_mapsignals.clear();
+    close(m_pipefd[0]);
+    close(m_pipefd[1]);
     m_signalLock.Unlock();
 }
 

@@ -26,6 +26,38 @@ CServerManage::~CServerManage()
 
 }
 
+void* ThreadsFuncServer(void* arg)
+{
+    CServerManage* pServer = (CServerManage*)arg;
+    if (pServer)
+    {
+        int nRet = -1;
+        epoll_event envs[MAX_EPOLL_ENVS];
+        memset(envs, 0, sizeof(epoll_event) * MAX_EPOLL_ENVS);
+
+        while(1)
+        {
+            nRet = epoll_wait(pServer->m_epollfd, envs, MAX_EPOLL_ENVS, -1);
+            if (nRet < 0)
+                return nullptr;
+            for (int i = 0; i < nRet; ++i) // ready fd
+            {
+                if (envs[i].data.fd == pServer->m_socklistenfd) // accept
+                    pServer->DoAccept(&envs[i]);
+                else if (envs[i].data.fd == pServer->m_pipefd[0]) // stop
+                    return nullptr;
+                else if (envs[i].data.fd == pServer->signalManage.Getfd()) // signal
+                    pServer->DoSignal(&envs[i]);
+                else if (envs[i].data.fd == pServer->timerManage.Getfd()) // timer
+                    pServer->DoTimer(&envs[i]);
+                else // client socket
+                    pServer->DoClientSockt(&envs[i]);
+            }
+        }
+    }
+    return nullptr;
+}
+
 bool CServerManage::AttachToEpoll(int fd)
 {
     epoll_event env;
@@ -192,30 +224,34 @@ bool CServerManage::Start()
     if (!Init())
         return false;
     // epoll thread
+//    int nRet = -1;
+//    epoll_event envs[MAX_EPOLL_ENVS];
+//    memset(envs, 0, sizeof(epoll_event) * MAX_EPOLL_ENVS);
+//    m_epollThread = std::move(std::thread([this, &nRet, &envs](){
+//        while(1)
+//        {
+//            nRet = epoll_wait(m_epollfd, envs, MAX_EPOLL_ENVS, -1);
+//            if (nRet < 0)
+//                return;
+//            for (int i = 0; i < nRet; ++i) // ready fd
+//            {
+//                if (envs[i].data.fd == m_socklistenfd) // accept
+//                    DoAccept(&envs[i]);
+//                else if (envs[i].data.fd == m_pipefd[0]) // stop
+//                    return;
+//                else if (envs[i].data.fd == signalManage.Getfd()) // signal
+//                    DoSignal(&envs[i]);
+//                else if (envs[i].data.fd == timerManage.Getfd()) // timer
+//                    DoTimer(&envs[i]);
+//                else // client socket
+//                    DoClientSockt(&envs[i]);
+//            }
+//        }
+//    }));
     int nRet = -1;
-    epoll_event envs[MAX_EPOLL_ENVS];
-    memset(envs, 0, sizeof(epoll_event) * MAX_EPOLL_ENVS);
-    m_epollThread = std::move(std::thread([this, &nRet, &envs](){
-        while(1)
-        {
-            nRet = epoll_wait(m_epollfd, envs, MAX_EPOLL_ENVS, -1);
-            if (nRet < 0)
-                return;
-            for (int i = 0; i < nRet; ++i) // ready fd
-            {
-                if (envs[i].data.fd == m_socklistenfd) // accept
-                    DoAccept(&envs[i]);
-                else if (envs[i].data.fd == m_pipefd[0]) // stop
-                    return;
-                else if (envs[i].data.fd == signalManage.Getfd()) // signal
-                    DoSignal(&envs[i]);
-                else if (envs[i].data.fd == timerManage.Getfd()) // timer
-                    DoTimer(&envs[i]);
-                else // client socket
-                    DoClientSockt(&envs[i]);
-            }
-        }
-    }));
+    nRet = pthread_create(&m_epollThread, NULL, ThreadsFuncServer, this);
+    if (nRet != 0)
+        return false;
 	return true;
 }
 
@@ -335,13 +371,14 @@ void CServerManage::DoClientSockt(epoll_event *env)
 
 bool CServerManage::Stop()
 {
-    write(m_pipefd[1], "2", 1);
-    m_epollThread.join();
     threadpool->Stop();
     delete threadpool;
     clientManage.CloseAllSocket();
     signalManage.Stop();
     timerManage.Stop();
+    write(m_pipefd[1], "2", 1);
+    //m_epollThread.join();
+    pthread_join(m_epollThread, NULL);
     close(m_pipefd[0]);
     close(m_pipefd[1]);
     close(m_epollfd);

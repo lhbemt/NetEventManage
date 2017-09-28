@@ -13,8 +13,12 @@
 #include "cthreadpool.h"
 
 struct epoll_event;
+
+void* ThreadsFuncServer(void* arg);
+
 class CServerManage : public CNonCopyClass
 {
+    friend void* ThreadsFuncServer(void* arg);
 public:
     CServerManage();
     ~CServerManage();
@@ -44,7 +48,8 @@ private:
     int                 m_pipefd[2]; // stop server
     int                 m_socklistenfd; // listen socket
     int                 m_epollfd; // epoll
-    std::thread         m_epollThread; // epoll thread
+    //std::thread         m_epollThread; // epoll thread
+    pthread_t           m_epollThread; // epoll thread
 };
 
 

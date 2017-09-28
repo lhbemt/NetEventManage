@@ -141,5 +141,7 @@ void CTimerManage::Stop()
 
     m_lstTimer.clear();
     m_mapTimer.clear();
+    close(m_pipefd[0]);
+    close(m_pipefd[1]);
     m_timerLock.Unlock();
 }
