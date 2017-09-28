@@ -2,7 +2,7 @@
 // Created by li on 9/5/17.
 //
 
-#include "../include/CServerManage.h"
+#include "../include/cservermanage.h"
 #include <sys/epoll.h>
 #include <sys/types.h>
 #include <sys/socket.h>
@@ -11,6 +11,10 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <functional>
+
+const char* strIp = "127.0.0.1";
+const int   nPort = 8080;
+const int   MAX_EPOLL_ENVS = 100000;
 
 CServerManage::CServerManage()
 {
@@ -212,6 +216,7 @@ bool CServerManage::Start()
             }
         }
     }));
+	return true;
 }
 
 void CServerManage::DoAccept(epoll_event *env)

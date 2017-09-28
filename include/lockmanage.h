@@ -5,7 +5,7 @@
 #ifndef NETEVENTMANAGE_LOCKMANAGE_H
 #define NETEVENTMANAGE_LOCKMANAGE_H
 #include <pthread.h>
-#include "CNonCopyClass.h"
+#include "cnoncopyclass.h"
 
 class CMutex : public CNonCopyClass
 {

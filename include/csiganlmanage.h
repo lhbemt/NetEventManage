@@ -1,7 +1,7 @@
 #ifndef CSIGANLMANAGE_H
 #define CSIGANLMANAGE_H
 
-#include "../include/CNonCopyClass.h"
+#include "../include/cnoncopyclass.h"
 #include "../include/lockmanage.h"
 #include <iostream>
 #include <map>

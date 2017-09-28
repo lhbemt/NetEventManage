@@ -9,7 +9,7 @@ $(target) : $(objs)
 main.o : main.cpp
 	$(cc) $(flags) -c $^ -o $@
 
-servermanage.o : ./source/CServerManage.cpp
+servermanage.o : ./source/cservermanage.cpp
 	$(cc) $(flags) -c $^ -o $@ -I ./include
 
 clientmanage.o : ./source/cclientmanage.cpp
@@ -24,7 +24,7 @@ signalmanage.o : ./source/csignalmanage.cpp
 timermanage.o : ./source/ctimermanage.cpp
 	$(cc) $(flags) -c $^ -o $@ -I ./include
 
-threadpool.o : ./source/CThreadPool.cpp
+threadpool.o : ./source/cthreadpool.cpp
 	$(cc) $(flags) -c $^ -o $@ -I ./include
 
 clean:

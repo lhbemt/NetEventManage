@@ -1,6 +1,6 @@
 #ifndef CTIMERMANAGE_H
 #define CTIMERMANAGE_H
-#include "../include/CNonCopyClass.h"
+#include "../include/cnoncopyclass.h"
 #include "../include/lockmanage.h"
 #include <iostream>
 #include <map>

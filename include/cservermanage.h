@@ -6,11 +6,11 @@
 #define NETSERVEREVENT_CSERVERMANAGE_H
 
 #include "comm.h"
-#include "CNonCopyClass.h"
+#include "cnoncopyclass.h"
 #include "cclientmanage.h"
 #include "csiganlmanage.h"
 #include "ctimermanage.h"
-#include "CThreadPool.h"
+#include "cthreadpool.h"
 
 struct epoll_event;
 class CServerManage : public CNonCopyClass

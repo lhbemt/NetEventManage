@@ -1,7 +1,7 @@
 #ifndef CCLIENTMANAGE_H
 #define CCLIENTMANAGE_H
 
-#include "CNonCopyClass.h"
+#include "cnoncopyclass.h"
 #include <iostream>
 #include <map>
 #include "ctcpsocket.h"

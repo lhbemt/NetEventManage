@@ -2,7 +2,7 @@
 // Created by li on 9/6/17.
 //
 
-#include "CThreadPool.h"
+#include "cthreadpool.h"
 #include <unistd.h>
 
 void* ThreadsFunc(void* arg)

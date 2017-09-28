@@ -7,11 +7,6 @@
 #include <iostream>
 #include <functional>
 
-static const char* strIp = "127.0.0.1";
-static const int   nPort = 8080;
-static const int   MAX_EPOLL_ENVS = 100000;
-
-
 // event type define
 enum class EVENT_TYPE
 {
