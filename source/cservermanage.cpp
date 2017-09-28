@@ -250,7 +250,7 @@ void CServerManage::DoSignal(epoll_event *env) // siganl
     int signo = 0;
     while(1)
     {
-        nRet = recv(env->data.fd, &signo, sizeof(int), 0);
+        nRet = read(env->data.fd, &signo, sizeof(int));
         if (nRet == -1)
         {
             if (errno == EAGAIN || errno == EWOULDBLOCK)
@@ -281,7 +281,7 @@ void CServerManage::DoTimer(epoll_event *env)
     int timerid = 0;
     while(1)
     {
-        nRet = recv(env->data.fd, &timerid, sizeof(int), 0);
+        nRet = read(env->data.fd, &timerid, sizeof(int));
         if (nRet == -1)
         {
             if (errno == EAGAIN || errno == EWOULDBLOCK)

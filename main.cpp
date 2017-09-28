@@ -40,8 +40,10 @@ int main()
 	env.fd = 1; //timer id
 	env.callBack = funcHello;
 	env.arg = nullptr;
-	manage.RegisterEvent(EVENT_TYPE::EVENT_TIMER, env, 1000);
-	sleep(5);
+    manage.RegisterEvent(EVENT_TYPE::EVENT_TIMER, env, 1000); // 1s
+    sleep(5);
+    manage.UnRegisterEvent(EVENT_TYPE::EVENT_TIMER, env);
+    sleep(2);
 	manage.Stop();
 	return 0;
 }

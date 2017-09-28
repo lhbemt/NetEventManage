@@ -73,7 +73,8 @@ bool CTimerManage::Init()
     int nRet = pipe(m_pipefd);
     if (nRet == -1)
         return false;
-    fcntl(m_pipefd[0], F_SETFL, fcntl(m_pipefd[0], F_GETFL, 0) | O_NONBLOCK, 0); // read should be nonblock
+    nRet = fcntl(m_pipefd[0], F_SETFL, fcntl(m_pipefd[0], F_GETFL, 0) | O_NONBLOCK); // read should be nonblock
+    Tick();
     return true;
 }
 
