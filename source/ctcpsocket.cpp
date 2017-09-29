@@ -14,9 +14,10 @@ void CTcpSocket::SendData(void *pData, int nLen)
     }
 
     // copy to sendbuff
-    memcpy(m_szSendBuff + m_nSendLen, &nLen, sizeof(nLen)); // len
-    m_nSendLen += sizeof(nLen);
+    //memcpy(m_szSendBuff + m_nSendLen, &nLen, sizeof(nLen)); // len
+    //m_nSendLen += sizeof(nLen); // don't send length, just for test
     memcpy(m_szSendBuff + m_nSendLen, pData, nLen);
+    m_nSendLen += nLen;
     // deliver send
     int nTotalSend = m_nSendLen;
     int nReadySend = 0;
@@ -67,9 +68,9 @@ void CTcpSocket::RecvData() // use et mode
         {
             if (errno == EAGAIN || errno == EWOULDBLOCK)
             {
-                m_lRecvLock.Unlock();
+                //m_lRecvLock.Unlock();
                 //return -2;
-				return;
+				break;
             }
             else
             {
@@ -86,10 +87,16 @@ void CTcpSocket::RecvData() // use et mode
     }
 
     // do something with recv buff
-    m_lRecvLock.Unlock();
     // ...
     //
     //return 0; // recv success
+	if (m_nRecvLen > 0) //echo client
+	{
+      SendData(m_szRecvBuff, m_nRecvLen);
+	  memset(m_szRecvBuff, 0, BUFF_SIZE);
+      m_nRecvLen = 0;
+	}
+	m_lRecvLock.Unlock();
 	return;
 
 

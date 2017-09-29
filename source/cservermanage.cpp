@@ -38,20 +38,27 @@ void* ThreadsFuncServer(void* arg)
         while(1)
         {
             nRet = epoll_wait(pServer->m_epollfd, envs, MAX_EPOLL_ENVS, -1);
-            if (nRet < 0)
-                return nullptr;
-            for (int i = 0; i < nRet; ++i) // ready fd
+            if (nRet < 0 && errno != EINTR) // EINTR wait again
             {
-                if (envs[i].data.fd == pServer->m_socklistenfd) // accept
-                    pServer->DoAccept(&envs[i]);
-                else if (envs[i].data.fd == pServer->m_pipefd[0]) // stop
-                    return nullptr;
-                else if (envs[i].data.fd == pServer->signalManage.Getfd()) // signal
-                    pServer->DoSignal(&envs[i]);
-                else if (envs[i].data.fd == pServer->timerManage.Getfd()) // timer
-                    pServer->DoTimer(&envs[i]);
-                else // client socket
-                    pServer->DoClientSockt(&envs[i]);
+                return nullptr;
+            }
+            else if (nRet < 0 && errno == EINTR) // wait again
+                continue;
+            else
+            {
+                for (int i = 0; i < nRet; ++i) // ready fd
+                {
+                    if (envs[i].data.fd == pServer->m_socklistenfd) // accept
+                        pServer->DoAccept(&envs[i]);
+                    else if (envs[i].data.fd == pServer->m_pipefd[0]) // stop
+                        return nullptr;
+                    else if (envs[i].data.fd == pServer->signalManage.Getfd()) // signal
+                        pServer->DoSignal(&envs[i]);
+                    else if (envs[i].data.fd == pServer->timerManage.Getfd()) // timer
+                        pServer->DoTimer(&envs[i]);
+                    else // client socket
+                        pServer->DoClientSockt(&envs[i]);
+                }
             }
         }
     }
@@ -276,6 +283,7 @@ void CServerManage::DoAccept(epoll_event *env)
         {
             fcntl(nRet, F_SETFL, fcntl(nRet, F_GETFL, 0) | O_NONBLOCK);
             AttachToEpoll(nRet);
+            clientManage.AddToManage(nRet);
         }
     }
 }

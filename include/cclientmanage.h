@@ -5,6 +5,7 @@
 #include <iostream>
 #include <map>
 #include "ctcpsocket.h"
+#include "MemoryPool.h"
 
 class CClientManage : public CNonCopyClass
 {
@@ -34,13 +35,22 @@ public:
         m_mapClient.clear();
     }
 
-    void AddToManage(int sockfd, CTcpSocket* tcp)
+    bool AddToManage(int sockfd)
     {
-        m_mapClient.insert(std::make_pair(sockfd, tcp));
+        CTcpSocket* psocket = m_tcppool.GetElement();
+        if (psocket)
+        {
+            psocket->Init(sockfd); // init first
+            m_mapClient.insert(std::make_pair(sockfd, psocket));
+            return true;
+        }
+        else
+            return false;
     }
 
 private:
     std::map<int, CTcpSocket*> m_mapClient;
+    CMemoryPool<CTcpSocket>    m_tcppool;
 };
 
 

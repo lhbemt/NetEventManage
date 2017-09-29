@@ -36,14 +36,18 @@ int main()
 	  return false;
 	}
 	
-	struct EventBase env;
-	env.fd = 1; //timer id
-	env.callBack = funcHello;
-	env.arg = nullptr;
-    manage.RegisterEvent(EVENT_TYPE::EVENT_TIMER, env, 1000); // 1s
-    sleep(5);
-    manage.UnRegisterEvent(EVENT_TYPE::EVENT_TIMER, env);
-    sleep(2);
+//	struct EventBase env;
+//	env.fd = 1; //timer id
+//	env.callBack = funcHello;
+//	env.arg = nullptr;
+//  manage.RegisterEvent(EVENT_TYPE::EVENT_TIMER, env, 1000); // 1s
+//  sleep(5);
+//  manage.UnRegisterEvent(EVENT_TYPE::EVENT_TIMER, env);
+//  sleep(2);
+//
+	// test socket echo
+	while(1)
+	{}
 	manage.Stop();
 	return 0;
 }
