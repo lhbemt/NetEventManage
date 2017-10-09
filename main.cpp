@@ -1,5 +1,6 @@
 #include "./include/cservermanage.h"
 #include <unistd.h>
+#include <signal.h>
 
 using namespace std;
 
@@ -46,8 +47,17 @@ int main()
 //  sleep(2);
 //
 	// test socket echo
-	while(1)
-	{}
+//	while(1)
+//	{}
+	
+	// test signal
+	struct EventBase env;
+	env.fd = SIGINT; //signal
+	env.callBack = funcHello;
+	env.arg = nullptr;
+	manage.RegisterEvent(EVENT_TYPE::EVENT_SIG, env);
+	sleep(5);
+	manage.UnRegisterEvent(EVENT_TYPE::EVENT_SIG, env);
 	manage.Stop();
 	return 0;
 }
